@@ -1,0 +1,28 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "RESTFul HTTP APIs for a hypothetical Shopping Cart.",
+        "title": "Shopping Cart Backend",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8888",
+    "basePath": "/",
+    "paths": {
+        "/ping": {
+            "get": {
+                "description": "is the server running?",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {}
+            }
+        }
+    }
+}

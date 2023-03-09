@@ -1,0 +1,19 @@
+basePath: /
+host: localhost:8888
+info:
+  contact: {}
+  description: RESTFul HTTP APIs for a hypothetical Shopping Cart.
+  title: Shopping Cart Backend
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: is the server running?
+      produces:
+      - application/json
+      responses: {}
+schemes:
+- http
+swagger: "2.0"
