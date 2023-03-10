@@ -10,6 +10,7 @@ import (
 
 type ItemService interface {
 	Add(req serializer.CreateItemRequest) error
+	List() ([]serializer.GetItemResponse, error)
 }
 
 type itemService struct {
@@ -40,4 +41,21 @@ func (itemServ *itemService) Add(req serializer.CreateItemRequest) error {
 	// extra logging as necessary
 	// storing of metrics for business
 	return itemServ.itemRepo.Add(item)
+}
+
+func (itemServ *itemService) List() ([]serializer.GetItemResponse, error) {
+	items, err := itemServ.itemRepo.List()
+	if err != nil {
+		return nil, err
+	}
+	response := make([]serializer.GetItemResponse, 0)
+	for _, item := range items {
+		sku := strconv.Itoa(int(item.SKU))
+		itemResp := serializer.GetItemResponse{
+			Name: item.Name,
+			SKU:  sku,
+		}
+		response = append(response, itemResp)
+	}
+	return response, nil
 }

@@ -93,6 +93,7 @@ func main() {
 	auth.Use(authMiddlware.GetInstance().MiddlewareFunc())
 	{
 		auth.POST("/items", itemHandler.HandleAddItem)
+		auth.GET("/items", itemHandler.HandleGetItem)
 		auth.PUT("/account/suspend", suspendHandler.HandleAccountSuspension)
 	}
 	h.Spin()

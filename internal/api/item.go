@@ -52,3 +52,17 @@ func (itHandler ItemHandler) HandleAddItem(c context.Context, ctx *app.RequestCo
 
 	ctx.JSON(200, serializer.CreateItemResponse{Status: "success", Message: "item added successfully"})
 }
+
+func (itHandler ItemHandler) HandleGetItem(c context.Context, ctx *app.RequestContext) {
+	items, err := itHandler.itemServ.List()
+	if err != nil {
+		// Report issue to sentry and raise an alert
+		fmt.Printf("internal server error: %v\n", err)
+		ctx.JSON(500, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(200, items)
+}

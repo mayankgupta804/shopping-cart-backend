@@ -2,6 +2,7 @@ package domain
 
 type ItemRepository interface {
 	Add(item Item) error
+	List() ([]Item, error)
 }
 
 type Item struct {

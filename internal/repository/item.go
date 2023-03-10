@@ -23,3 +23,22 @@ func (itemRepo *itemRepository) Add(item domain.Item) error {
 
 	return nil
 }
+
+func (itemRepo *itemRepository) List() ([]domain.Item, error) {
+	items := make([]domain.Item, 0)
+	sql := "SELECT name, sku FROM items;"
+	result, err := itemRepo.db.QueryRows(sql)
+	if err != nil {
+		return nil, err
+	}
+	for result.Next() {
+		item := domain.Item{}
+		if err := result.Scan(&item.Name, &item.SKU); err != nil {
+			fmt.Printf("error encountered: %v", err)
+			continue
+		}
+		items = append(items, item)
+	}
+
+	return items, nil
+}
