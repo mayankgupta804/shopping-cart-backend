@@ -8,10 +8,14 @@ import (
 	"gopkg.in/dealancer/validate.v2"
 )
 
-var ErrAccountAlreadyExists error = errors.New("account with this email exists")
+var (
+	ErrAccountAlreadyExists error = errors.New("account with this email exists")
+	ErrAccountDoesNotExist  error = errors.New("account with this email does not exist")
+)
 
 type AccountService interface {
 	Create(req serializer.CreateAccountRequest) error
+	Suspend(req serializer.SuspendAccountRequest) error
 }
 
 type accountService struct {
@@ -37,9 +41,21 @@ func (acntServ *accountService) Create(req serializer.CreateAccountRequest) erro
 	// any business logic
 	// extra logging as necessary
 	// storing of metrics for business
-	if exists := acntServ.acntRepo.Exists(acnt.Email); exists {
+	if acntExists := acntServ.acntRepo.Exists(acnt.Email); acntExists {
 		return ErrAccountAlreadyExists
 	}
 
 	return acntServ.acntRepo.Create(acnt)
+}
+
+func (acntServ *accountService) Suspend(req serializer.SuspendAccountRequest) error {
+	if err := validate.Validate(req); err != nil {
+		return err
+	}
+
+	if acntExists := acntServ.acntRepo.Exists(req.Email); !acntExists {
+		return ErrAccountDoesNotExist
+	}
+
+	return acntServ.acntRepo.Suspend(req.Email)
 }

@@ -46,38 +46,48 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
 			type login struct {
-				Username string `json:"username"`
+				Email    string `json:"email"`
 				Password string `json:"password"`
 			}
+			// TODO: add payload validation here
 			var loginVals login
 			if err := c.BindAndValidate(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
-			userID := loginVals.Username
+			email := loginVals.Email
 			password := loginVals.Password
 
-			acnt, err := ath.acntRepository.Get(userID)
+			acnt, err := ath.acntRepository.Get(email)
 			if err != nil {
 				return nil, errors.New("account does not exist")
 			}
 
-			if userID == strings.TrimSpace(acnt.Email) && password == strings.TrimSpace(acnt.Password) {
+			if email == strings.TrimSpace(acnt.Email) && password == strings.TrimSpace(acnt.Password) && acnt.Active {
 				return &domain.Account{
-					Email:    userID,
-					Password: password,
+					Email:  email,
+					Active: acnt.Active,
+					ID:     acnt.ID,
+					Role:   acnt.Role,
 				}, nil
 			}
-
-			// if (userID == "admin" && password == "admin") || (userID == "test" && password == "test") {
-			// 	return &domain.Account{
-			// 		ID:   userID,
-			// 		Name: "admin",
-			// 	}, nil
-			// }
 
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, ctx context.Context, c *app.RequestContext) bool {
+			// TODO: Remove commented code after testing
+
+			// reqData := c.Request.Body()
+			// acc := domain.Account{}
+			// if err := json.Unmarshal(reqData, &acc); err != nil {
+			// 	fmt.Printf("error encountered while unmarshalling JSON: %v\n", err)
+			// 	c.JSON(400, map[string]string{
+			// 		"error": "error encountered while unmarshalling JSON",
+			// 	})
+			// 	return false
+			// }
+			// fmt.Println("data: ", acc)
+
+			// TODO: Work on authorization in the correct manner
 			if _, ok := data.(*domain.Account); ok {
 				return true
 			}

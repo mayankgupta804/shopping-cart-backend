@@ -4,6 +4,7 @@ type AccountRepository interface {
 	Create(acnt Account) error
 	Get(email string) (Account, error)
 	Exists(email string) bool
+	Suspend(email string) error
 }
 
 const (

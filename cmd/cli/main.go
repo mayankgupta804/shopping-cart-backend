@@ -57,12 +57,18 @@ func main() {
 	acntService := service.NewAccountService(acntRepo)
 	authMiddlware := middleware.NewAuthMiddleware(acntRepo)
 	regnHandler := api.NewRegistrationHandler(acntService)
+	suspendHandler := api.NewSuspendHandler(acntService)
+
 	// casbin.NewCasbinMiddleware()
 
 	url := swagger.URL("http://localhost:8888/swagger/doc.json") // The url pointing to API definition
 	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler, url))
 
-	// h.GET("/ping", PingHandler)
+	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
+		ctx.JSON(200, map[string]string{
+			"ping": "pong",
+		})
+	})
 
 	// When you use jwt.New(), the function is already automatically called for checking,
 	// which means you don't need to call it again.
@@ -70,15 +76,15 @@ func main() {
 		log.Fatalf("authMiddleware.MiddlewareInit() Error: %s", errInit.Error())
 	}
 
-	h.POST("/account", regnHandler.HandleRegistration)
-	h.POST("/login", authMiddlware.GetInstance().LoginHandler)
-	h.POST("/logout", authMiddlware.GetInstance().LogoutHandler)
-
 	h.NoRoute(authMiddlware.GetInstance().MiddlewareFunc(), func(ctx context.Context, c *app.RequestContext) {
 		claims := jwt.ExtractClaims(ctx, c)
 		hlog.Infof("NoRoute claims: %#v\n", claims)
 		c.JSON(404, map[string]string{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
+
+	h.POST("/account/register", regnHandler.HandleRegistration)
+	h.POST("/account/login", authMiddlware.GetInstance().LoginHandler)
+	h.POST("/account/logout", authMiddlware.GetInstance().LogoutHandler)
 
 	auth := h.Group("/auth")
 	// Refresh time can be longer than token timeout
@@ -86,7 +92,12 @@ func main() {
 
 	auth.Use(authMiddlware.GetInstance().MiddlewareFunc())
 	{
-		auth.GET("/ping", PingHandler)
+		auth.PUT("/account/suspend", suspendHandler.HandleAccountSuspension)
+		auth.GET("/test", func(c context.Context, ctx *app.RequestContext) {
+			ctx.JSON(200, map[string]string{
+				"auth": "works",
+			})
+		})
 	}
 	h.Spin()
 }

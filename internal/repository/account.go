@@ -44,3 +44,12 @@ func (acntRepo accountRepository) Exists(email string) bool {
 	}
 	return false
 }
+
+func (acntRepo accountRepository) Suspend(email string) error {
+	sql := fmt.Sprintf(`UPDATE accounts SET is_active=false WHERE email='%s';`, email)
+	if err := acntRepo.db.Execute(sql); err != nil {
+		// format error properly
+		return err
+	}
+	return nil
+}
