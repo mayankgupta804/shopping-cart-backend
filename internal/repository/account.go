@@ -24,9 +24,9 @@ func (acntRepo accountRepository) Create(acnt domain.Account) error {
 	return nil
 }
 
-func (acntRepo accountRepository) Get(email, password string) (domain.Account, error) {
+func (acntRepo accountRepository) Get(email string) (domain.Account, error) {
 	acnt := domain.Account{}
-	sql := fmt.Sprintf("SELECT * FROM accounts WHERE email='%s' AND password='%s';", email, password)
+	sql := fmt.Sprintf("SELECT * FROM accounts WHERE email='%s';", email)
 	result := acntRepo.db.QueryRow(sql)
 	if err := result.Scan(&acnt.ID, &acnt.Name, &acnt.Email, &acnt.Password, &acnt.Role, &acnt.Active); err != nil {
 		// format error properly
