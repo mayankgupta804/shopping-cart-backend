@@ -12,6 +12,7 @@ type Config struct {
 	Port              string `env:"DB_PORT, default=5432" json:",omitempty"`
 	ConnectionTimeout int    `env:"DB_CONNECT_TIMEOUT" json:",omitempty"`
 	Password          string `env:"DB_PASSWORD, default=secret" json:"-"`
+	SSL               string `env:"DB_SSL_MODE"`
 }
 
 func (c *Config) DatabaseConfig() *Config {
@@ -42,6 +43,11 @@ func (c *Config) ConnectionURL() string {
 	if v := c.ConnectionTimeout; v > 0 {
 		q.Add("connect_timeout", strconv.Itoa(v))
 	}
+
+	if v := c.SSL; len(v) > 0 {
+		q.Add("sslmode", v)
+	}
+
 	u.RawQuery = q.Encode()
 
 	return u.String()

@@ -78,5 +78,6 @@ func dbValues(cfg *Config) map[string]string {
 	setIfNotEmpty(p, "port", cfg.Port)
 	setIfPositive(p, "connect_timeout", cfg.ConnectionTimeout)
 	setIfNotEmpty(p, "password", cfg.Password)
+	setIfNotEmpty(p, "sslmode", cfg.SSL)
 	return p
 }
