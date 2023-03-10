@@ -8,7 +8,6 @@ import (
 	"shopping-cart-backend/internal/middleware"
 	"shopping-cart-backend/internal/repository"
 	"shopping-cart-backend/internal/service"
-
 	"shopping-cart-backend/pkg/database"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -54,21 +53,22 @@ func main() {
 	}
 
 	acntRepo := repository.NewAccountRepository(db)
+	itemRepo := repository.NewItemRepository(db)
+
 	acntService := service.NewAccountService(acntRepo)
+	itemService := service.NewItemService(itemRepo)
+
 	authMiddlware := middleware.NewAuthMiddleware(acntRepo)
 	regnHandler := api.NewRegistrationHandler(acntService)
 	suspendHandler := api.NewSuspendHandler(acntService)
+	itemHandler := api.NewItemHandler(itemService)
 
 	// casbin.NewCasbinMiddleware()
 
 	url := swagger.URL("http://localhost:8888/swagger/doc.json") // The url pointing to API definition
 	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler, url))
 
-	h.GET("/ping", func(c context.Context, ctx *app.RequestContext) {
-		ctx.JSON(200, map[string]string{
-			"ping": "pong",
-		})
-	})
+	h.GET("/ping", PingHandler)
 
 	// When you use jwt.New(), the function is already automatically called for checking,
 	// which means you don't need to call it again.
@@ -92,12 +92,8 @@ func main() {
 
 	auth.Use(authMiddlware.GetInstance().MiddlewareFunc())
 	{
+		auth.POST("/items", itemHandler.HandleAddItem)
 		auth.PUT("/account/suspend", suspendHandler.HandleAccountSuspension)
-		auth.GET("/test", func(c context.Context, ctx *app.RequestContext) {
-			ctx.JSON(200, map[string]string{
-				"auth": "works",
-			})
-		})
 	}
 	h.Spin()
 }

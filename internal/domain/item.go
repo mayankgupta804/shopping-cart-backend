@@ -1,5 +1,9 @@
 package domain
 
+type ItemRepository interface {
+	Add(item Item) error
+}
+
 type Item struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
