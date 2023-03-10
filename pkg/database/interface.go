@@ -6,14 +6,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const ErrExecuteSQLQuery = -1
-
-func (db *PgClient) Execute(sql string) (int64, error) {
-	result, err := db.pool.Exec(context.Background(), sql)
+func (db *PgClient) Execute(sql string) error {
+	_, err := db.pool.Exec(context.Background(), sql)
 	if err != nil {
-		return ErrExecuteSQLQuery, err
+		return err
 	}
-	return result.RowsAffected(), nil
+	return nil
 }
 
 func (db *PgClient) QueryRow(sql string) pgx.Row {
