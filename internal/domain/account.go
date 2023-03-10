@@ -2,7 +2,8 @@ package domain
 
 type AccountRepository interface {
 	Create(acnt Account) error
-	Get(userName string) (Account, error)
+	Get(email string) (Account, error)
+	Exists(email string) bool
 }
 
 const (

@@ -4,10 +4,11 @@ import (
 	"errors"
 	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/serializer"
-	"strings"
 
 	"gopkg.in/dealancer/validate.v2"
 )
+
+var ErrAccountAlreadyExists error = errors.New("account with this email exists")
 
 type AccountService interface {
 	Create(req serializer.CreateAccountRequest) error
@@ -36,13 +37,8 @@ func (acntServ *accountService) Create(req serializer.CreateAccountRequest) erro
 	// any business logic
 	// extra logging as necessary
 	// storing of metrics for business
-	a, err := acntServ.acntRepo.Get(acnt.Email)
-	if err != nil {
-		return err
-	}
-
-	if strings.TrimSpace(a.Email) == acnt.Email {
-		return errors.New("account with the same email already exists")
+	if exists := acntServ.acntRepo.Exists(acnt.Email); exists {
+		return ErrAccountAlreadyExists
 	}
 
 	return acntServ.acntRepo.Create(acnt)

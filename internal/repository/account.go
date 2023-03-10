@@ -34,3 +34,13 @@ func (acntRepo accountRepository) Get(email string) (domain.Account, error) {
 	}
 	return acnt, nil
 }
+
+func (acntRepo accountRepository) Exists(email string) bool {
+	acnt := domain.Account{}
+	sql := fmt.Sprintf("SELECT email FROM accounts WHERE email='%s';", email)
+	result := acntRepo.db.QueryRow(sql)
+	if err := result.Scan(&acnt.Email); err == nil {
+		return true
+	}
+	return false
+}
