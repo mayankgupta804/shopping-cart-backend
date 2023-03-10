@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"shopping-cart-backend/internal/domain"
 	"strings"
@@ -33,7 +34,8 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*domain.Account); ok {
 				return jwt.MapClaims{
-					identityKey: v.Name,
+					identityKey: v.Email,
+					"role":      string(v.Role),
 				}
 			}
 			return jwt.MapClaims{}
@@ -41,7 +43,8 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
 			return &domain.Account{
-				Name: claims[identityKey].(string),
+				Email: claims[identityKey].(string),
+				Role:  domain.Role(claims["role"].(string)),
 			}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
@@ -74,21 +77,15 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, ctx context.Context, c *app.RequestContext) bool {
-			// TODO: Remove commented code after testing
+			claims := jwt.ExtractClaims(ctx, c)
+			email := claims[identityKey].(string)
+			role := claims["role"].(string)
 
-			// reqData := c.Request.Body()
-			// acc := domain.Account{}
-			// if err := json.Unmarshal(reqData, &acc); err != nil {
-			// 	fmt.Printf("error encountered while unmarshalling JSON: %v\n", err)
-			// 	c.JSON(400, map[string]string{
-			// 		"error": "error encountered while unmarshalling JSON",
-			// 	})
-			// 	return false
-			// }
-			// fmt.Println("data: ", acc)
+			// TODO: Remove after testing
+			fmt.Println("email: ", email)
+			fmt.Println("role: ", role)
 
-			// TODO: Work on authorization in the correct manner
-			if _, ok := data.(*domain.Account); ok {
+			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) {
 				return true
 			}
 			return false
