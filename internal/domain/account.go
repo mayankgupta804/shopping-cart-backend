@@ -1,5 +1,10 @@
 package domain
 
+type AccountRepository interface {
+	Create(acnt Account) error
+	Get(userName, password string) (Account, error)
+}
+
 const (
 	AdminRole Role = "Admin"
 	UserRole  Role = "User"
@@ -8,10 +13,10 @@ const (
 type Role string
 
 type Account struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"-"`
-	Role     Role   `json:"role"`
-	Active   bool   `json:"active"`
+	ID       string
+	Name     string
+	Email    string
+	Password string
+	Active   bool
+	Role     Role
 }
