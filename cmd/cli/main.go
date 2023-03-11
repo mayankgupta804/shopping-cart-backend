@@ -65,8 +65,8 @@ func main() {
 	itemRepo = repository.NewItemRepository(db)
 	itemService = service.NewItemService(itemRepo)
 
-	authMiddlware := middleware.NewAuthMiddleware(acntRepo)
-	userAuthMiddleware := middleware.NewUserAuthMiddleware(acntRepo)
+	adminAuthMiddlware := middleware.NewAuthMiddleware(acntRepo, domain.AdminRole)
+	userAuthMiddleware := middleware.NewAuthMiddleware(acntRepo, domain.UserRole)
 
 	regnHandler := api.NewRegistrationHandler(acntService)
 	suspendHandler := api.NewSuspendHandler(acntService)
@@ -79,11 +79,11 @@ func main() {
 
 	// When you use jwt.New(), the function is already automatically called for checking,
 	// which means you don't need to call it again.
-	if errInit := authMiddlware.GetInstance().MiddlewareInit(); errInit != nil {
+	if errInit := adminAuthMiddlware.GetInstance().MiddlewareInit(); errInit != nil {
 		log.Fatalf("authMiddleware.MiddlewareInit() Error: %s", errInit.Error())
 	}
 
-	h.NoRoute(authMiddlware.GetInstance().MiddlewareFunc(), func(ctx context.Context, c *app.RequestContext) {
+	h.NoRoute(adminAuthMiddlware.GetInstance().MiddlewareFunc(), func(ctx context.Context, c *app.RequestContext) {
 		claims := jwt.ExtractClaims(ctx, c)
 		hlog.Infof("NoRoute claims: %#v\n", claims)
 		c.JSON(404, map[string]string{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
@@ -92,22 +92,20 @@ func main() {
 	account := h.Group("/account")
 	{
 		account.POST("/register", regnHandler.HandleRegistration)
-		account.POST("/login", authMiddlware.GetInstance().LoginHandler)
-		account.POST("/logout", authMiddlware.GetInstance().LogoutHandler)
-		// TODO: Use different middleware for RBAC
-		account.PUT("/suspend", authMiddlware.GetInstance().MiddlewareFunc(), suspendHandler.HandleAccountSuspension)
+		account.POST("/login", adminAuthMiddlware.GetInstance().LoginHandler)
+		account.POST("/logout", adminAuthMiddlware.GetInstance().LogoutHandler)
+		account.PUT("/suspend", adminAuthMiddlware.GetInstance().MiddlewareFunc(), suspendHandler.HandleAccountSuspension)
 	}
 
 	auth := h.Group("/auth")
 	{
 		// Refresh time can be longer than token timeout
-		auth.GET("/refresh_token", authMiddlware.GetInstance().RefreshHandler)
+		auth.GET("/refresh_token", adminAuthMiddlware.GetInstance().RefreshHandler)
 	}
 
 	{
 		h.GET("/items", userAuthMiddleware.GetInstance().MiddlewareFunc(), itemHandler.HandleGetItem)
-		// TODO: Use different middleware for RBAC
-		h.POST("/items", authMiddlware.GetInstance().MiddlewareFunc(), itemHandler.HandleAddItem)
+		h.POST("/items", adminAuthMiddlware.GetInstance().MiddlewareFunc(), itemHandler.HandleAddItem)
 	}
 
 	h.Spin()

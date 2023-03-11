@@ -17,10 +17,11 @@ var identityKey = "id"
 
 type auth struct {
 	acntRepository domain.AccountRepository
+	role           domain.Role
 }
 
-func NewAuthMiddleware(acntRepository domain.AccountRepository) auth {
-	return auth{acntRepository: acntRepository}
+func NewAuthMiddleware(acntRepository domain.AccountRepository, role domain.Role) auth {
+	return auth{acntRepository: acntRepository, role: role}
 }
 
 func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
@@ -84,8 +85,10 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			// TODO: Remove after testing
 			fmt.Println("email: ", email)
 			fmt.Println("role: ", role)
+			fmt.Println("ath role: ", ath.role)
 
-			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) {
+			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) &&
+				domain.Role(strings.TrimSpace(string(v.Role))) == ath.role {
 				return true
 			}
 			return false
