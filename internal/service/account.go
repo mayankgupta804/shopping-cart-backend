@@ -4,8 +4,6 @@ import (
 	"errors"
 	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/serializer"
-
-	"gopkg.in/dealancer/validate.v2"
 )
 
 var (
@@ -27,10 +25,6 @@ func NewAccountService(acntRepo domain.AccountRepository) *accountService {
 }
 
 func (acntServ *accountService) Create(req serializer.CreateAccountRequest) error {
-	if err := validate.Validate(req); err != nil {
-		return err
-	}
-
 	acnt := domain.Account{
 		Name:     req.Name,
 		Email:    req.Email,
@@ -49,10 +43,6 @@ func (acntServ *accountService) Create(req serializer.CreateAccountRequest) erro
 }
 
 func (acntServ *accountService) Suspend(req serializer.SuspendAccountRequest) error {
-	if err := validate.Validate(req); err != nil {
-		return err
-	}
-
 	if acntExists := acntServ.acntRepo.Exists(req.Email); !acntExists {
 		return ErrAccountDoesNotExist
 	}

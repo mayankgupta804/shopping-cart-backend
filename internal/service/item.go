@@ -4,8 +4,6 @@ import (
 	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/serializer"
 	"strconv"
-
-	"gopkg.in/dealancer/validate.v2"
 )
 
 type ItemService interface {
@@ -22,10 +20,6 @@ func NewItemService(itemRepo domain.ItemRepository) *itemService {
 }
 
 func (itemServ *itemService) Add(req serializer.CreateItemRequest) error {
-	if err := validate.Validate(req); err != nil {
-		return err
-	}
-
 	sku, err := strconv.Atoi(req.SKU)
 	if err != nil {
 		// format error properly
