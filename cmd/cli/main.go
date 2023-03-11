@@ -5,6 +5,7 @@ import (
 	"log"
 	_ "shopping-cart-backend/docs"
 	"shopping-cart-backend/internal/api"
+	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/middleware"
 	"shopping-cart-backend/internal/repository"
 	"shopping-cart-backend/internal/service"
@@ -16,7 +17,6 @@ import (
 	"github.com/hertz-contrib/jwt"
 	"github.com/hertz-contrib/swagger"
 	swaggerFiles "github.com/swaggo/files"
-	// "github.com/hertz-contrib/casbin"
 )
 
 // PingHandler
@@ -47,25 +47,32 @@ func main() {
 		Host:     "localhost",
 		Port:     "5432",
 	}
+
 	db, err := database.NewFromEnv(context.Background(), cfg.DatabaseConfig())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	acntRepo := repository.NewAccountRepository(db)
-	itemRepo := repository.NewItemRepository(db)
+	var acntRepo domain.AccountRepository
+	var acntService service.AccountService
 
-	acntService := service.NewAccountService(acntRepo)
-	itemService := service.NewItemService(itemRepo)
+	acntRepo = repository.NewAccountRepository(db)
+	acntService = service.NewAccountService(acntRepo)
+
+	var itemRepo domain.ItemRepository
+	var itemService service.ItemService
+
+	itemRepo = repository.NewItemRepository(db)
+	itemService = service.NewItemService(itemRepo)
 
 	authMiddlware := middleware.NewAuthMiddleware(acntRepo)
+	userAuthMiddleware := middleware.NewUserAuthMiddleware(acntRepo)
+
 	regnHandler := api.NewRegistrationHandler(acntService)
 	suspendHandler := api.NewSuspendHandler(acntService)
 	itemHandler := api.NewItemHandler(itemService)
 
-	// casbin.NewCasbinMiddleware()
-
-	url := swagger.URL("http://localhost:8888/swagger/doc.json") // The url pointing to API definition
+	url := swagger.URL("http://localhost:8888/swagger/doc.json") // TODO: Get from cfg: The url pointing to API definition
 	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler, url))
 
 	h.GET("/ping", PingHandler)
@@ -82,19 +89,26 @@ func main() {
 		c.JSON(404, map[string]string{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
 
-	h.POST("/account/register", regnHandler.HandleRegistration)
-	h.POST("/account/login", authMiddlware.GetInstance().LoginHandler)
-	h.POST("/account/logout", authMiddlware.GetInstance().LogoutHandler)
+	account := h.Group("/account")
+	{
+		account.POST("/register", regnHandler.HandleRegistration)
+		account.POST("/login", authMiddlware.GetInstance().LoginHandler)
+		account.POST("/logout", authMiddlware.GetInstance().LogoutHandler)
+		// TODO: Use different middleware for RBAC
+		account.PUT("/suspend", authMiddlware.GetInstance().MiddlewareFunc(), suspendHandler.HandleAccountSuspension)
+	}
 
 	auth := h.Group("/auth")
-	// Refresh time can be longer than token timeout
-	auth.GET("/refresh_token", authMiddlware.GetInstance().RefreshHandler)
-
-	auth.Use(authMiddlware.GetInstance().MiddlewareFunc())
 	{
-		auth.POST("/items", itemHandler.HandleAddItem)
-		auth.GET("/items", itemHandler.HandleGetItem)
-		auth.PUT("/account/suspend", suspendHandler.HandleAccountSuspension)
+		// Refresh time can be longer than token timeout
+		auth.GET("/refresh_token", authMiddlware.GetInstance().RefreshHandler)
 	}
+
+	{
+		h.GET("/items", userAuthMiddleware.GetInstance().MiddlewareFunc(), itemHandler.HandleGetItem)
+		// TODO: Use different middleware for RBAC
+		h.POST("/items", authMiddlware.GetInstance().MiddlewareFunc(), itemHandler.HandleAddItem)
+	}
+
 	h.Spin()
 }

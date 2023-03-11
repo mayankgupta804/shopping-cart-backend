@@ -8,8 +8,8 @@ type AccountRepository interface {
 }
 
 const (
-	AdminRole Role = "Admin"
-	UserRole  Role = "User"
+	AdminRole Role = "admin"
+	UserRole  Role = "user"
 )
 
 type Role string
