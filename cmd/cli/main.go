@@ -41,7 +41,7 @@ func PingHandler(c context.Context, ctx *app.RequestContext) {
 // @schemes http
 func main() {
 	config.Load()
-	// h := server.Default()
+
 	h := server.New(server.WithHostPorts(fmt.Sprintf(":%s", config.App.Server.Port)))
 
 	databaseCfg := database.Config{
