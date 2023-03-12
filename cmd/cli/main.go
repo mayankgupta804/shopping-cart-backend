@@ -65,12 +65,19 @@ func main() {
 	itemRepo = repository.NewItemRepository(db)
 	itemService = service.NewItemService(itemRepo)
 
+	var cartRepo domain.CartRepository
+	var cartService service.CartService
+
+	cartRepo = repository.NewCartRepository(db)
+	cartService = service.NewCartService(cartRepo, itemRepo)
+
 	adminAuthMiddlware := middleware.NewAuthMiddleware(acntRepo, domain.AdminRole)
 	userAuthMiddleware := middleware.NewAuthMiddleware(acntRepo, domain.UserRole)
 
 	regnHandler := api.NewRegistrationHandler(acntService)
 	suspendHandler := api.NewSuspendHandler(acntService)
 	itemHandler := api.NewItemHandler(itemService)
+	cartHandler := api.NewCartHandler(cartService)
 
 	url := swagger.URL("http://localhost:8888/swagger/doc.json") // TODO: Get from cfg: The url pointing to API definition
 	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler, url))
@@ -106,6 +113,13 @@ func main() {
 	{
 		h.GET("/items", userAuthMiddleware.GetInstance().MiddlewareFunc(), itemHandler.HandleGetItem)
 		h.POST("/items", adminAuthMiddlware.GetInstance().MiddlewareFunc(), itemHandler.HandleAddItem)
+	}
+
+	cart := h.Group("/cart-items")
+	{
+		cart.POST("/add", userAuthMiddleware.GetInstance().MiddlewareFunc(), cartHandler.HandleAddToCart)
+		cart.POST("/remove", userAuthMiddleware.GetInstance().MiddlewareFunc(), cartHandler.HandleRemoveFromCart)
+
 	}
 
 	h.Spin()

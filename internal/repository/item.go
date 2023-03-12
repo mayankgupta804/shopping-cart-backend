@@ -42,3 +42,14 @@ func (itemRepo *itemRepository) List() ([]domain.Item, error) {
 
 	return items, nil
 }
+
+func (itemRepo *itemRepository) Get(itemID string) (domain.Item, error) {
+	item := domain.Item{}
+	sql := fmt.Sprintf("SELECT * FROM items WHERE id='%s';", itemID)
+	result := itemRepo.db.QueryRow(sql)
+	if err := result.Scan(&item.ID, &item.Name, &item.SKU); err != nil {
+		// format error properly
+		return item, err
+	}
+	return item, nil
+}

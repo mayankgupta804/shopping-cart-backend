@@ -1,7 +1,6 @@
 package domain
 
-type Cart struct {
-	ID        string `json:"-"`
-	AccountID string `json:"account_id"`
-	Items     []Item
+type CartRepository interface {
+	Add(accountID string, item Item) error
+	Remove(accountID string, item Item) error
 }
