@@ -5,5 +5,6 @@ type AddToCartRequest struct {
 }
 
 type AddToCartResponse struct {
-	Response
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
 }

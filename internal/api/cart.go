@@ -53,7 +53,7 @@ func (crtHandler CartHandler) HandleAddToCart(c context.Context, ctx *app.Reques
 		return
 	}
 
-	ctx.JSON(200, serializer.CreateItemResponse{Status: "success", Message: "item added successfully"})
+	ctx.JSON(200, serializer.AddToCartResponse{Status: "success", Message: "item added successfully"})
 }
 
 func (crtHandler CartHandler) HandleRemoveFromCart(c context.Context, ctx *app.RequestContext) {
