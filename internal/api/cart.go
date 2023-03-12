@@ -26,7 +26,7 @@ func (crtHandler CartHandler) HandleAddToCart(c context.Context, ctx *app.Reques
 	addToCartReq := serializer.AddToCartRequest{}
 	if err = json.Unmarshal(reqData, &addToCartReq); err != nil {
 		fmt.Printf("error encountered while unmarshalling JSON: %v\n", err)
-		ctx.JSON(400, serializer.Error{Error: "error encountered while unmarshalling JSON"})
+		ctx.JSON(400, serializer.Error{Error: "JSON body seems to be malformed"})
 		return
 	}
 

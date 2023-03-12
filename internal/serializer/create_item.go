@@ -1,7 +1,7 @@
 package serializer
 
 type CreateItemRequest struct {
-	Name string `validate:"gte=3 & lte=25"`
+	Name string `validate:"gte=2 & lte=25"`
 	SKU  string `validate:"empty=false"`
 }
 

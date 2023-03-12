@@ -25,9 +25,7 @@ func (itHandler ItemHandler) HandleAddItem(c context.Context, ctx *app.RequestCo
 	createItemReq := serializer.CreateItemRequest{}
 	if err = json.Unmarshal(reqData, &createItemReq); err != nil {
 		fmt.Printf("error encountered while unmarshalling JSON: %v\n", err)
-		ctx.JSON(400, map[string]string{
-			"error": "error encountered while unmarshalling JSON",
-		})
+		ctx.JSON(400, serializer.Error{Error: "JSON body seems to be malformed"})
 		return
 	}
 
@@ -35,22 +33,18 @@ func (itHandler ItemHandler) HandleAddItem(c context.Context, ctx *app.RequestCo
 		// maybe log validation errors to get a hang of how many times
 		// users are unable to register. this would give us the idea
 		// about how we can make the API friendly to use
-		ctx.JSON(400, map[string]string{
-			"error": err.Error(),
-		})
+		ctx.JSON(400, serializer.Error{Error: err.Error()})
 		return
 	}
 
 	if err = itHandler.itemServ.Add(createItemReq); err != nil {
 		// Report issue to sentry and raise an alert
 		fmt.Printf("internal server error: %v\n", err)
-		ctx.JSON(500, map[string]string{
-			"error": err.Error(),
-		})
+		ctx.JSON(500, serializer.Error{Error: "internal server error"})
 		return
 	}
 
-	ctx.JSON(200, serializer.CreateItemResponse{Status: "success", Message: "item added successfully"})
+	ctx.JSON(201, serializer.CreateItemResponse{Status: "success", Message: "item added successfully"})
 }
 
 func (itHandler ItemHandler) HandleGetItem(c context.Context, ctx *app.RequestContext) {
@@ -58,9 +52,7 @@ func (itHandler ItemHandler) HandleGetItem(c context.Context, ctx *app.RequestCo
 	if err != nil {
 		// Report issue to sentry and raise an alert
 		fmt.Printf("internal server error: %v\n", err)
-		ctx.JSON(500, map[string]string{
-			"error": err.Error(),
-		})
+		ctx.JSON(500, serializer.Error{Error: "internal server error"})
 		return
 	}
 
