@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/api"
 	"shopping-cart-backend/internal/domain"
@@ -33,7 +32,7 @@ func main() {
 
 	db, err := database.NewFromEnv(context.Background(), &databaseCfg)
 	if err != nil {
-		log.Fatal(err)
+		hlog.Fatal(err)
 	}
 
 	var acntRepo domain.AccountRepository
@@ -65,7 +64,7 @@ func main() {
 	h.GET("/ping", PingHandler)
 
 	if errInit := adminAuthMiddlware.GetInstance().MiddlewareInit(); errInit != nil {
-		log.Fatalf("authMiddleware.MiddlewareInit() Error: %s", errInit.Error())
+		hlog.Fatalf("authMiddleware.MiddlewareInit() Error: %s", errInit.Error())
 	}
 
 	h.NoRoute(adminAuthMiddlware.GetInstance().MiddlewareFunc(), func(ctx context.Context, c *app.RequestContext) {
