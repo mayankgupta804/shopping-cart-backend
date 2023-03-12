@@ -1,7 +1,7 @@
 package serializer
 
 type AddToCartRequest struct {
-	ItemID string `json:"item_id"`
+	ItemID string `validate:"empty=false"`
 }
 
 type AddToCartResponse struct {

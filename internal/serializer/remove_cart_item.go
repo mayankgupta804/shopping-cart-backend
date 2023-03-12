@@ -1,7 +1,7 @@
 package serializer
 
 type RemoveFromCartRequest struct {
-	ItemID string
+	ItemID string `validate:"empty=false"`
 }
 
 type RemoveFromCartResponse struct {
