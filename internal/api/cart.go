@@ -81,5 +81,5 @@ func (crtHandler CartHandler) HandleRemoveFromCart(c context.Context, ctx *app.R
 		return
 	}
 
-	ctx.JSON(204, serializer.CreateItemResponse{Status: "success", Message: "item removed successfully"})
+	ctx.JSON(204, serializer.RemoveFromCartResponse{Status: "success", Message: "item removed successfully"})
 }

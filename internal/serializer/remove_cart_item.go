@@ -5,5 +5,6 @@ type RemoveFromCartRequest struct {
 }
 
 type RemoveFromCartResponse struct {
-	Response
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
 }
