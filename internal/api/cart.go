@@ -57,23 +57,14 @@ func (crtHandler CartHandler) HandleAddToCart(c context.Context, ctx *app.Reques
 }
 
 func (crtHandler CartHandler) HandleRemoveFromCart(c context.Context, ctx *app.RequestContext) {
-	var err error
-	reqData := ctx.Request.Body()
-	removeFromCartReq := serializer.RemoveFromCartRequest{}
-	if err = json.Unmarshal(reqData, &removeFromCartReq); err != nil {
-		fmt.Printf("error encountered while unmarshalling JSON: %v\n", err)
+	itemId, ok := ctx.GetQuery("item_id")
+	if !ok {
 		ctx.JSON(400, map[string]string{
-			"error": "error encountered while unmarshalling JSON",
+			"error": "item_id must not be empty.",
 		})
 		return
 	}
-
-	// if err = validate.Validate(addToCartReq); err != nil {
-	// 	ctx.JSON(400, map[string]string{
-	// 		"error": err.Error(),
-	// 	})
-	// 	return
-	// }
+	removeFromCartReq := serializer.RemoveFromCartRequest{ItemID: itemId}
 
 	claims := jwt.ExtractClaims(c, ctx)
 	accountID := claims["account_id"].(string)
@@ -81,7 +72,7 @@ func (crtHandler CartHandler) HandleRemoveFromCart(c context.Context, ctx *app.R
 	// TODO: Remove after testing
 	fmt.Println("accountID: ", accountID)
 
-	if err = crtHandler.cartServ.Remove(accountID, removeFromCartReq); err != nil {
+	if err := crtHandler.cartServ.Remove(accountID, removeFromCartReq); err != nil {
 		// Report issue to sentry and raise an alert
 		fmt.Printf("internal server error: %v\n", err)
 		ctx.JSON(500, map[string]string{
@@ -90,5 +81,5 @@ func (crtHandler CartHandler) HandleRemoveFromCart(c context.Context, ctx *app.R
 		return
 	}
 
-	ctx.JSON(200, serializer.CreateItemResponse{Status: "success", Message: "item removed successfully"})
+	ctx.JSON(204, serializer.CreateItemResponse{Status: "success", Message: "item removed successfully"})
 }
