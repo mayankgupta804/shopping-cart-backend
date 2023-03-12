@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"shopping-cart-backend/config"
-	_ "shopping-cart-backend/docs"
 	"shopping-cart-backend/internal/api"
 	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/middleware"
@@ -17,28 +16,8 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/jwt"
-	"github.com/hertz-contrib/swagger"
-	swaggerFiles "github.com/swaggo/files"
 )
 
-// PingHandler
-// @summary check to see if the server is running or not
-// @Accept application/json
-// @Produce application/json
-// @Router /ping [get]
-func PingHandler(c context.Context, ctx *app.RequestContext) {
-	ctx.JSON(200, map[string]string{
-		"ping": "pong",
-	})
-}
-
-// @title Shopping Cart Backend
-// @version 1.0
-// @description RESTFul HTTP APIs for a hypothetical Shopping Cart.
-
-// @host localhost:8888
-// @BasePath /
-// @schemes http
 func main() {
 	config.Load()
 
@@ -83,9 +62,6 @@ func main() {
 	itemHandler := api.NewItemHandler(itemService)
 	cartHandler := api.NewCartHandler(cartService)
 
-	url := swagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.App.Server.Port))
-	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler, url))
-
 	h.GET("/ping", PingHandler)
 
 	if errInit := adminAuthMiddlware.GetInstance().MiddlewareInit(); errInit != nil {
@@ -98,7 +74,7 @@ func main() {
 		c.JSON(404, map[string]string{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
 
-	account := h.Group("/account")
+	account := h.Group("/accounts")
 	{
 		account.POST("/register", regnHandler.HandleRegistration)
 		account.POST("/login", adminAuthMiddlware.GetInstance().LoginHandler)
@@ -125,4 +101,10 @@ func main() {
 	}
 
 	h.Spin()
+}
+
+func PingHandler(c context.Context, ctx *app.RequestContext) {
+	ctx.JSON(200, map[string]string{
+		"ping": "pong",
+	})
 }
