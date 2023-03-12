@@ -20,7 +20,7 @@ import (
 func main() {
 	config.Load()
 
-	h := server.New(server.WithHostPorts(fmt.Sprintf(":%s", config.App.Server.Port)))
+	h := server.New(server.WithHostPorts(fmt.Sprintf(":%s", config.App.Server.Port)), server.WithBasePath("/api"))
 
 	databaseCfg := database.Config{
 		Name:     config.App.Database.Name,
@@ -73,30 +73,37 @@ func main() {
 		c.JSON(404, map[string]string{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
 
-	account := h.Group("/accounts")
+	v1 := h.Group("/v1")
+
+	accounts := v1.Group("/accounts")
 	{
-		account.POST("/register", regnHandler.HandleRegistration)
-		account.POST("/login", adminAuthMiddlware.GetInstance().LoginHandler)
-		account.POST("/logout", adminAuthMiddlware.GetInstance().LogoutHandler)
-		account.PUT("/suspend", adminAuthMiddlware.GetInstance().MiddlewareFunc(), suspendHandler.HandleAccountSuspension)
+		accounts.POST("/register", regnHandler.HandleRegistration)
+		accounts.POST("/login", adminAuthMiddlware.GetInstance().LoginHandler)
+		accounts.POST("/logout", adminAuthMiddlware.GetInstance().LogoutHandler)
+		// CAVEAT: Suspended account will be active until the JWT token expires
+		// To resolve the above issue, we need to store the token in Redis OR in process' memory
+		// and when a user from a suspended account makes a request, we need to check Redis/memory and block the client
+		accounts.PUT("/suspend", adminAuthMiddlware.GetInstance().MiddlewareFunc(), suspendHandler.HandleAccountSuspension)
 	}
 
-	auth := h.Group("/auth")
+	auth := v1.Group("/auth")
 	{
 		// Refresh time can be longer than token timeout
+		// TODO: add another middleware to see if the account is not suspended
+		// Check DB to see if the account is still active
 		auth.GET("/refresh_token", adminAuthMiddlware.GetInstance().RefreshHandler)
 	}
 
+	admin := v1.Group("admin")
 	{
-		h.GET("/items", userAuthMiddleware.GetInstance().MiddlewareFunc(), itemHandler.HandleGetItem)
-		h.POST("/items", adminAuthMiddlware.GetInstance().MiddlewareFunc(), itemHandler.HandleAddItem)
+		admin.POST("/items", adminAuthMiddlware.GetInstance().MiddlewareFunc(), itemHandler.HandleAddItem)
 	}
 
-	cart := h.Group("/cart-items")
+	user := v1.Group("user")
 	{
-		cart.POST("/add", userAuthMiddleware.GetInstance().MiddlewareFunc(), cartHandler.HandleAddToCart)
-		cart.POST("/remove", userAuthMiddleware.GetInstance().MiddlewareFunc(), cartHandler.HandleRemoveFromCart)
-
+		user.GET("/items", userAuthMiddleware.GetInstance().MiddlewareFunc(), itemHandler.HandleGetItem)
+		user.POST("/cart-items", userAuthMiddleware.GetInstance().MiddlewareFunc(), cartHandler.HandleAddToCart)
+		user.DELETE("/cart-items", userAuthMiddleware.GetInstance().MiddlewareFunc(), cartHandler.HandleRemoveFromCart)
 	}
 
 	h.Spin()
