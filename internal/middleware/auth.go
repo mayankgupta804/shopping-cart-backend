@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/domain"
 	"strings"
 	"time"
@@ -27,11 +28,13 @@ func NewAuthMiddleware(acntRepository domain.AccountRepository, role domain.Role
 func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 
 	authMiddleware, err := jwt.New(&jwt.HertzJWTMiddleware{
-		Realm:       "test zone",          // read from config
-		Key:         []byte("secret key"), // read from config
+		// Realm:       "test zone",          // read from config
+		// Key:         []byte("secret key"), // read from config
+		Realm:       config.App.Server.JWTRealm,
+		Key:         []byte(config.App.Server.JWTSecret),
 		Timeout:     time.Hour,
 		MaxRefresh:  time.Hour,
-		IdentityKey: identityKey, // read from config
+		IdentityKey: identityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*domain.Account); ok {
 				return jwt.MapClaims{

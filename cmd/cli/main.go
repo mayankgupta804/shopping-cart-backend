@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"shopping-cart-backend/config"
 	_ "shopping-cart-backend/docs"
 	"shopping-cart-backend/internal/api"
 	"shopping-cart-backend/internal/domain"
@@ -38,17 +40,19 @@ func PingHandler(c context.Context, ctx *app.RequestContext) {
 // @BasePath /
 // @schemes http
 func main() {
-	h := server.Default()
+	config.Load()
+	// h := server.Default()
+	h := server.New(server.WithHostPorts(fmt.Sprintf(":%s", config.App.Server.Port)))
 
-	cfg := database.Config{
-		Name:     "bike_station",
-		User:     "mayank",
-		Password: "secret",
-		Host:     "localhost",
-		Port:     "5432",
+	databaseCfg := database.Config{
+		Name:     config.App.Database.Name,
+		User:     config.App.Database.User,
+		Password: config.App.Database.Password,
+		Host:     config.App.Database.Host,
+		Port:     config.App.Database.Port,
 	}
 
-	db, err := database.NewFromEnv(context.Background(), cfg.DatabaseConfig())
+	db, err := database.NewFromEnv(context.Background(), &databaseCfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,13 +83,11 @@ func main() {
 	itemHandler := api.NewItemHandler(itemService)
 	cartHandler := api.NewCartHandler(cartService)
 
-	url := swagger.URL("http://localhost:8888/swagger/doc.json") // TODO: Get from cfg: The url pointing to API definition
+	url := swagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.App.Server.Port))
 	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler, url))
 
 	h.GET("/ping", PingHandler)
 
-	// When you use jwt.New(), the function is already automatically called for checking,
-	// which means you don't need to call it again.
 	if errInit := adminAuthMiddlware.GetInstance().MiddlewareInit(); errInit != nil {
 		log.Fatalf("authMiddleware.MiddlewareInit() Error: %s", errInit.Error())
 	}

@@ -6,17 +6,13 @@ import (
 )
 
 type Config struct {
-	Name              string `env:"DB_NAME, default=bike_station" json:",omitempty"`
-	User              string `env:"DB_USER, default=bike_station" json:",omitempty"`
-	Host              string `env:"DB_HOST, default=localhost" json:",omitempty"`
-	Port              string `env:"DB_PORT, default=5432" json:",omitempty"`
-	ConnectionTimeout int    `env:"DB_CONNECT_TIMEOUT" json:",omitempty"`
-	Password          string `env:"DB_PASSWORD, default=secret" json:"-"`
-	SSL               string `env:"DB_SSL_MODE"`
-}
-
-func (c *Config) DatabaseConfig() *Config {
-	return c
+	Name              string
+	User              string
+	Host              string
+	Port              string
+	Password          string
+	SSL               string
+	ConnectionTimeout int
 }
 
 func (c *Config) ConnectionURL() string {
