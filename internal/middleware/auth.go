@@ -35,8 +35,9 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*domain.Account); ok {
 				return jwt.MapClaims{
-					identityKey: v.Email,
-					"role":      string(v.Role),
+					identityKey:  v.Email,
+					"role":       string(v.Role),
+					"account_id": v.ID,
 				}
 			}
 			return jwt.MapClaims{}
@@ -46,6 +47,7 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			return &domain.Account{
 				Email: claims[identityKey].(string),
 				Role:  domain.Role(claims["role"].(string)),
+				ID:    claims["account_id"].(string),
 			}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
