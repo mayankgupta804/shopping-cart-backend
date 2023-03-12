@@ -28,8 +28,6 @@ func NewAuthMiddleware(acntRepository domain.AccountRepository, role domain.Role
 func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 
 	authMiddleware, err := jwt.New(&jwt.HertzJWTMiddleware{
-		// Realm:       "test zone",          // read from config
-		// Key:         []byte("secret key"), // read from config
 		Realm:       config.App.Server.JWTRealm,
 		Key:         []byte(config.App.Server.JWTSecret),
 		Timeout:     time.Hour,
