@@ -16,6 +16,8 @@ type Database struct {
 	Password      string
 	Port          string
 	Host          string
+	Dialect       string
+	SSLMode       string
 	MigrationsDir string
 }
 
@@ -47,6 +49,8 @@ func Load() {
 			Port:          getStringOrPanic("DATABASE_PORT"),
 			User:          getStringOrPanic("DATABASE_USER"),
 			Password:      getStringOrPanic("DATABASE_PASSWORD"),
+			Dialect:       getStringOrPanic("DATABASE_DIALECT"),
+			SSLMode:       getStringOrPanic("DATABASE_SSL_MODE"),
 			MigrationsDir: getStringOrPanic("DATABASE_MIGRATIONS_DIR"),
 		},
 	}

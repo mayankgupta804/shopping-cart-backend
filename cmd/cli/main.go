@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/api"
 	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/middleware"
+	"shopping-cart-backend/internal/migrations"
 	"shopping-cart-backend/internal/repository"
 	"shopping-cart-backend/internal/service"
 	"shopping-cart-backend/pkg/database"
@@ -15,11 +17,45 @@ import (
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/hertz-contrib/jwt"
+	"github.com/urfave/cli"
 )
 
 func main() {
 	config.Load()
 
+	clientApp := cli.NewApp()
+	clientApp.Name = "Shopping Cart Backend"
+	clientApp.Version = "0.0.1"
+	clientApp.Commands = []cli.Command{
+		{
+			Name:        "start:webserver",
+			Description: "Start Incident Web Service",
+			Action: func(c *cli.Context) {
+				StartWebServer()
+			},
+		},
+
+		{
+			Name:        "db:migrate:up",
+			Description: "Create migrations",
+			Action: func(c *cli.Context) error {
+				return migrations.Up(config.App.Database)
+			},
+		},
+		{
+			Name:        "db:migrate:down",
+			Description: "Destroy migrations",
+			Action: func(c *cli.Context) error {
+				return migrations.Down(config.App.Database)
+			},
+		},
+	}
+	if err := clientApp.Run(os.Args); err != nil {
+		panic(err)
+	}
+}
+
+func StartWebServer() {
 	h := server.New(server.WithHostPorts(fmt.Sprintf(":%s", config.App.Server.Port)), server.WithBasePath("/api"))
 
 	databaseCfg := database.Config{
