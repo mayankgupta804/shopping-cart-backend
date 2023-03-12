@@ -25,9 +25,7 @@ func (regnHandler RegistrationHandler) HandleRegistration(c context.Context, ctx
 	createAccountReq := serializer.CreateAccountRequest{}
 	if err = json.Unmarshal(reqData, &createAccountReq); err != nil {
 		fmt.Printf("error encountered while unmarshalling JSON: %v\n", err)
-		ctx.JSON(400, map[string]string{
-			"error": "error encountered while unmarshalling JSON",
-		})
+		ctx.JSON(400, serializer.Error{Error: "JSON body seems to be malformed"})
 		return
 	}
 
@@ -35,25 +33,19 @@ func (regnHandler RegistrationHandler) HandleRegistration(c context.Context, ctx
 		// maybe log validation errors to get a hang of how many times
 		// users are unable to register. this would give us the idea
 		// about how we can make the API friendly to use
-		ctx.JSON(400, map[string]string{
-			"error": err.Error(),
-		})
+		ctx.JSON(400, serializer.Error{Error: err.Error()})
 		return
 	}
 
 	err = regnHandler.acntService.Create(createAccountReq)
 
 	if err == service.ErrAccountAlreadyExists {
-		ctx.JSON(400, map[string]string{
-			"error": err.Error(),
-		})
+		ctx.JSON(400, serializer.Error{Error: err.Error()})
 		return
 	} else if err != nil {
 		// Report issue to sentry and raise an alert
 		fmt.Printf("internal server error: %v\n", err)
-		ctx.JSON(500, map[string]string{
-			"error": err.Error(),
-		})
+		ctx.JSON(500, serializer.Error{Error: "internal server error"})
 		return
 	}
 
