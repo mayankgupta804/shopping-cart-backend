@@ -29,6 +29,8 @@ func (susHandler SuspendHandler) HandleAccountSuspension(c context.Context, ctx 
 		return
 	}
 
+	//TODO: Handle case where the account is the current account.
+
 	if err = validate.Validate(suspendAccountReq); err != nil {
 		// maybe log validation errors to get a hang of how many times
 		// users are unable to register. this would give us the idea

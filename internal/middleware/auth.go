@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/domain"
@@ -91,12 +90,6 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			email := claims[identityKey].(string)
 			role := claims["role"].(string)
 			active := claims["is_active"].(bool)
-
-			// TODO: Remove after testing
-			fmt.Println("email: ", email)
-			fmt.Println("role: ", role)
-			fmt.Println("ath role: ", ath.role)
-			fmt.Println("is active? ", active)
 
 			// TODO: Check from cache instead of from DB
 			acnt, err := ath.acntRepository.Get(email)
