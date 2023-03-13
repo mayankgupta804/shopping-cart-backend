@@ -119,14 +119,12 @@ func StartWebServer() {
 		// CAVEAT: Suspended account will be active until the JWT token expires
 		// To resolve the above issue, we need to store the token in Redis OR in process' memory
 		// and when a user from a suspended account makes a request, we need to check Redis/memory and block the client
+		// Currently, I am checking the DB for the information for the sake of simplicity
 		accounts.PUT("/suspend", adminAuthMiddlware.GetInstance().MiddlewareFunc(), suspendHandler.HandleAccountSuspension)
 	}
 
 	auth := v1.Group("/auth")
 	{
-		// Refresh time can be longer than token timeout
-		// TODO: add another middleware to see if the account is not suspended
-		// Check DB to see if the account is still active
 		auth.GET("/refresh_token", adminAuthMiddlware.GetInstance().RefreshHandler)
 	}
 

@@ -98,6 +98,16 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			fmt.Println("ath role: ", ath.role)
 			fmt.Println("is active? ", active)
 
+			// TODO: Check from cache instead of from DB
+			acnt, err := ath.acntRepository.Get(email)
+			if err != nil {
+				return false
+			}
+
+			if !acnt.Active {
+				return false
+			}
+
 			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) &&
 				domain.Role(strings.TrimSpace(string(v.Role))) == ath.role && v.Active && active {
 				return true
