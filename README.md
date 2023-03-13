@@ -235,6 +235,7 @@ ID, AccountID, ItemID, ItemName
 7. Decrease the number of files in the `serializer` directory.
 8. Improve route names.
 9. Add contextual logging.
+10. Add hashed password to DB.
 
 ## Notes
 
