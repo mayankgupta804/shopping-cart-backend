@@ -106,7 +106,7 @@ func StartWebServer() {
 	h.NoRoute(adminAuthMiddlware.GetInstance().MiddlewareFunc(), func(ctx context.Context, c *app.RequestContext) {
 		claims := jwt.ExtractClaims(ctx, c)
 		hlog.Infof("NoRoute claims: %#v\n", claims)
-		c.JSON(404, map[string]string{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
+		c.JSON(404, map[string]string{"code": "ROUTE_NOT_FOUND", "message": "Route not found"})
 	})
 
 	v1 := h.Group("/v1")

@@ -39,6 +39,7 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 					identityKey:  v.Email,
 					"role":       string(v.Role),
 					"account_id": v.ID,
+					"is_active":  v.Active,
 				}
 			}
 			return jwt.MapClaims{}
@@ -46,9 +47,10 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
 			return &domain.Account{
-				Email: claims[identityKey].(string),
-				Role:  domain.Role(claims["role"].(string)),
-				ID:    claims["account_id"].(string),
+				Email:  claims[identityKey].(string),
+				Role:   domain.Role(claims["role"].(string)),
+				ID:     claims["account_id"].(string),
+				Active: claims["is_active"].(bool),
 			}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
@@ -69,6 +71,10 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 				return nil, errors.New("account does not exist")
 			}
 
+			if !acnt.Active {
+				return nil, errors.New("account is not active anymore")
+			}
+
 			if email == strings.TrimSpace(acnt.Email) && password == strings.TrimSpace(acnt.Password) && acnt.Active {
 				return &domain.Account{
 					Email:  email,
@@ -84,14 +90,16 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			claims := jwt.ExtractClaims(ctx, c)
 			email := claims[identityKey].(string)
 			role := claims["role"].(string)
+			active := claims["is_active"].(bool)
 
 			// TODO: Remove after testing
 			fmt.Println("email: ", email)
 			fmt.Println("role: ", role)
 			fmt.Println("ath role: ", ath.role)
+			fmt.Println("is active? ", active)
 
 			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) &&
-				domain.Role(strings.TrimSpace(string(v.Role))) == ath.role {
+				domain.Role(strings.TrimSpace(string(v.Role))) == ath.role && v.Active && active {
 				return true
 			}
 			return false
