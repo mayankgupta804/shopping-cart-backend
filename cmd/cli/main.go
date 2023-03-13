@@ -97,7 +97,7 @@ func StartWebServer() {
 	itemHandler := api.NewItemHandler(itemService)
 	cartHandler := api.NewCartHandler(cartService)
 
-	h.GET("/ping", PingHandler)
+	h.GET("/ping", api.PingHandler)
 
 	if errInit := adminAuthMiddlware.GetInstance().MiddlewareInit(); errInit != nil {
 		hlog.Fatalf("authMiddleware.MiddlewareInit() Error: %s", errInit.Error())
@@ -141,10 +141,4 @@ func StartWebServer() {
 	}
 
 	h.Spin()
-}
-
-func PingHandler(c context.Context, ctx *app.RequestContext) {
-	ctx.JSON(200, map[string]string{
-		"ping": "pong",
-	})
 }
