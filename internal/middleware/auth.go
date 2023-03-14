@@ -7,14 +7,13 @@ import (
 	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/domain"
 	"shopping-cart-backend/internal/helpers/password"
-	"strings"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/hertz-contrib/jwt"
 )
 
-var identityKey = "id"
+var identityKey = "email"
 
 type auth struct {
 	acntRepository domain.AccountRepository
@@ -39,7 +38,6 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 					identityKey:  v.Email,
 					"role":       string(v.Role),
 					"account_id": v.ID,
-					"is_active":  v.Active,
 				}
 			}
 			return jwt.MapClaims{}
@@ -47,10 +45,9 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
 			return &domain.Account{
-				Email:  claims[identityKey].(string),
-				Role:   domain.Role(claims["role"].(string)),
-				ID:     claims["account_id"].(string),
-				Active: claims["is_active"].(bool),
+				Email: claims[identityKey].(string),
+				Role:  domain.Role(claims["role"].(string)),
+				ID:    claims["account_id"].(string),
 			}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
@@ -92,9 +89,8 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 			claims := jwt.ExtractClaims(ctx, c)
 			email := claims[identityKey].(string)
 			role := claims["role"].(string)
-			active := claims["is_active"].(bool)
 
-			// TODO: Check from cache instead of from DB
+			// Ideally this should be checked from cache instead of from DB
 			acnt, err := ath.acntRepository.Get(email)
 			if err != nil {
 				return false
@@ -104,8 +100,7 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 				return false
 			}
 
-			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) &&
-				domain.Role(strings.TrimSpace(string(v.Role))) == ath.role && v.Active && active {
+			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) && v.Role == ath.role {
 				return true
 			}
 			return false
