@@ -2,12 +2,15 @@
 --     1. CREATE ROLE "owner" with login password 'secret';
 --     2. CREATE DATABASE shop;
 -- +migrate Up
+
+CREATE TYPE valid_roles AS ENUM ('user', 'admin');
+
 CREATE TABLE accounts(
     ID SERIAL PRIMARY KEY NOT NULL, 
-    NAME CHAR(50) NOT NULL, 
-    EMAIL CHAR(25) NOT NULL, 
+    NAME TEXT NOT NULL, 
+    EMAIL TEXT NOT NULL, 
     PASSWORD text NOT NULL,
-    ROLE CHAR(5) NOT NULL, 
+    ROLE VALID_ROLES NOT NULL, 
     IS_ADMIN BOOLEAN NOT NULL
 );
 

@@ -165,7 +165,9 @@ ID, AccountID, ItemID, ItemName
     ```
 5. __List Items__
     __Request:__
-    ``` http -f GET "localhost:8888/api/v1/user/items" "Authorization: Bearer xxxxx"```
+    ``` 
+    http -f GET "localhost:8888/api/v1/user/items" "Authorization: Bearer xxxxx"
+    ```
     __Example Response:__
     ```
     [{
