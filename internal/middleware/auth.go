@@ -6,6 +6,7 @@ import (
 	"log"
 	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/domain"
+	"shopping-cart-backend/internal/helpers/password"
 	"strings"
 	"time"
 
@@ -63,27 +64,29 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 				return "", jwt.ErrMissingLoginValues
 			}
 			email := loginVals.Email
-			password := loginVals.Password
+			passwd := loginVals.Password
 
 			acnt, err := ath.acntRepository.Get(email)
 			if err != nil {
-				return nil, errors.New("account does not exist")
+				return nil, jwt.ErrFailedAuthentication
 			}
 
 			if !acnt.Active {
-				return nil, errors.New("account is not active anymore")
+				return nil, errors.New("account is not active")
 			}
 
-			if email == strings.TrimSpace(acnt.Email) && password == strings.TrimSpace(acnt.Password) && acnt.Active {
-				return &domain.Account{
-					Email:  email,
-					Active: acnt.Active,
-					ID:     acnt.ID,
-					Role:   acnt.Role,
-				}, nil
+			if !password.CompareHashAndPassword([]byte(acnt.Password), []byte(passwd)) {
+				return nil, jwt.ErrFailedAuthentication
+
 			}
 
-			return nil, jwt.ErrFailedAuthentication
+			return &domain.Account{
+				Email:  email,
+				Active: acnt.Active,
+				ID:     acnt.ID,
+				Role:   acnt.Role,
+				Name:   acnt.Name,
+			}, nil
 		},
 		Authorizator: func(data interface{}, ctx context.Context, c *app.RequestContext) bool {
 			claims := jwt.ExtractClaims(ctx, c)
