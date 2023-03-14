@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"shopping-cart-backend/internal/domain"
+	"shopping-cart-backend/internal/helpers/password"
 	"shopping-cart-backend/internal/serializer"
 )
 
@@ -25,18 +26,20 @@ func NewAccountService(acntRepo domain.AccountRepository) *accountService {
 }
 
 func (acntServ *accountService) Create(req serializer.CreateAccountRequest) error {
+	if acntExists := acntServ.acntRepo.Exists(req.Email); acntExists {
+		return ErrAccountAlreadyExists
+	}
+
+	passHash, err := password.GenerateHashedPassword([]byte(req.Password))
+	if errors.Is(err, password.ErrPasswordTooLong) || errors.Is(err, password.ErrUnexpected) {
+		// report errors for observability purposes maybe?
+		return err
+	}
 	acnt := domain.Account{
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: string(passHash),
 		Role:     domain.Role(req.Role),
-	}
-
-	// any business logic
-	// extra logging as necessary
-	// storing of metrics for business
-	if acntExists := acntServ.acntRepo.Exists(acnt.Email); acntExists {
-		return ErrAccountAlreadyExists
 	}
 
 	return acntServ.acntRepo.Create(acnt)
