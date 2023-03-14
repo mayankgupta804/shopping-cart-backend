@@ -1,4 +1,4 @@
-package helpers
+package password
 
 import (
 	"errors"
@@ -18,7 +18,6 @@ func GenerateHashedPassword(password []byte) ([]byte, error) {
 	if errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		return nil, ErrPasswordTooLong
 	} else if err != nil {
-		// log and report this error
 		return nil, ErrUnexpected
 	}
 	return password, nil
