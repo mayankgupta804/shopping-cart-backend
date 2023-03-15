@@ -234,7 +234,7 @@ ID, AccountID, ItemID, ItemName
 4. Add more API tests.
 5. Explore more edge cases.
 6. I have implemented RBAC using JWT-based middleware which works fine when the business use-cases are limited, but would be a pain when the scope of the system increases. So, implementing RBAC using [Casbin](https://github.com/casbin/casbin) would be better for the long run.
-7. Decrease the number of files in the `serializer` directory.
+~~7. Decrease the number of files in the `serializer` directory.~~
 8. Improve route names.
 9. Add contextual logging.
 ~~10. Add hashed password to DB.~~
