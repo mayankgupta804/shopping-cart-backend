@@ -6,14 +6,14 @@ import (
 	"log"
 	"shopping-cart-backend/config"
 	"shopping-cart-backend/internal/domain"
-	"strings"
+	"shopping-cart-backend/internal/helpers/password"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/hertz-contrib/jwt"
 )
 
-var identityKey = "id"
+var identityKey = "email"
 
 type auth struct {
 	acntRepository domain.AccountRepository
@@ -38,7 +38,6 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 					identityKey:  v.Email,
 					"role":       string(v.Role),
 					"account_id": v.ID,
-					"is_active":  v.Active,
 				}
 			}
 			return jwt.MapClaims{}
@@ -46,10 +45,9 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c)
 			return &domain.Account{
-				Email:  claims[identityKey].(string),
-				Role:   domain.Role(claims["role"].(string)),
-				ID:     claims["account_id"].(string),
-				Active: claims["is_active"].(bool),
+				Email: claims[identityKey].(string),
+				Role:  domain.Role(claims["role"].(string)),
+				ID:    claims["account_id"].(string),
 			}
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
@@ -63,35 +61,36 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 				return "", jwt.ErrMissingLoginValues
 			}
 			email := loginVals.Email
-			password := loginVals.Password
+			passwd := loginVals.Password
 
 			acnt, err := ath.acntRepository.Get(email)
 			if err != nil {
-				return nil, errors.New("account does not exist")
+				return nil, jwt.ErrFailedAuthentication
 			}
 
 			if !acnt.Active {
-				return nil, errors.New("account is not active anymore")
+				return nil, errors.New("account is not active")
 			}
 
-			if email == strings.TrimSpace(acnt.Email) && password == strings.TrimSpace(acnt.Password) && acnt.Active {
-				return &domain.Account{
-					Email:  email,
-					Active: acnt.Active,
-					ID:     acnt.ID,
-					Role:   acnt.Role,
-				}, nil
+			if !password.CompareHashAndPassword([]byte(acnt.Password), []byte(passwd)) {
+				return nil, jwt.ErrFailedAuthentication
+
 			}
 
-			return nil, jwt.ErrFailedAuthentication
+			return &domain.Account{
+				Email:  email,
+				Active: acnt.Active,
+				ID:     acnt.ID,
+				Role:   acnt.Role,
+				Name:   acnt.Name,
+			}, nil
 		},
 		Authorizator: func(data interface{}, ctx context.Context, c *app.RequestContext) bool {
 			claims := jwt.ExtractClaims(ctx, c)
 			email := claims[identityKey].(string)
 			role := claims["role"].(string)
-			active := claims["is_active"].(bool)
 
-			// TODO: Check from cache instead of from DB
+			// Ideally this should be checked from cache instead of from DB
 			acnt, err := ath.acntRepository.Get(email)
 			if err != nil {
 				return false
@@ -101,8 +100,7 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 				return false
 			}
 
-			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) &&
-				domain.Role(strings.TrimSpace(string(v.Role))) == ath.role && v.Active && active {
+			if v, ok := data.(*domain.Account); ok && v.Email == email && v.Role == domain.Role(role) && v.Role == ath.role {
 				return true
 			}
 			return false
