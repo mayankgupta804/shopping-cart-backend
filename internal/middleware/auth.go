@@ -55,11 +55,11 @@ func (ath *auth) GetInstance() *jwt.HertzJWTMiddleware {
 				Email    string `json:"email"`
 				Password string `json:"password"`
 			}
-			// TODO: add payload validation here
 			var loginVals login
 			if err := c.BindAndValidate(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
+
 			email := loginVals.Email
 			passwd := loginVals.Password
 

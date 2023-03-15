@@ -1,7 +1,7 @@
 package serializer
 
 type SuspendAccountRequest struct {
-	Email string `validate:"empty=false | format=email"`
+	Email string `validate:"empty=false & format=email" json:"email"`
 }
 
 type SuspendAccountResponse struct {
