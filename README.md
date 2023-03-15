@@ -228,7 +228,7 @@ ID, AccountID, ItemID, ItemName
  
 ## TODOs (_or Things to Improve_):
 
-1. Add better validation of request inputs.
+~~1. Add better validation of request inputs.~~
 2. Return "client-friendly" standard and error responses.
 3. Add more unit tests.
 4. Add more API tests.
